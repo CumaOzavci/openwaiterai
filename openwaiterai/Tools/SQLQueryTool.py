@@ -10,13 +10,14 @@ class SQLQueryTool(BaseTool):
     A LangChain tool for querying a SQL database.
     """
 
+    debug: bool = False
     name: str = "SQLQueryTool"
     description: str = (
         "A tool to query a SQL database. Provide an SQL query as input, and it will return the results."
     )
     sql_database: Optional[SQLDatabase] = None
 
-    def __init__(self):
+    def __init__(self, debug: bool = False):
         """
         Initializes the SQLQueryTool with a database connection string from environment variables.
 
@@ -28,6 +29,7 @@ class SQLQueryTool(BaseTool):
         - OPENWAITERAI_DB_PASSWORD: The database password.
         """
         super().__init__()
+        self.debug = debug
         db_host = os.getenv("OPENWAITERAI_DB_HOST", "localhost")
         db_port = os.getenv("OPENWAITERAI_DB_PORT", "5432")
         db_name = os.getenv("OPENWAITERAI_DB_NAME", "example")
@@ -49,10 +51,16 @@ class SQLQueryTool(BaseTool):
         Returns:
             str: The query result.
         """
+        if self.debug:
+            print(f"DEBUG: Executing Query: {query}")
         try:
             result = self.sql_database.run(query)  # Use the run method
+            if self.debug:
+                print(f"DEBUG: Query Result: {result}")
             return str(result)
         except Exception as e:
+            if self.debug:
+                print(f"DEBUG: Error occurred: {str(e)}")
             return f"Error executing query: {str(e)}"
 
     async def _arun(self, query: str) -> str:

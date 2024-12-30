@@ -22,7 +22,10 @@ class OpenWaiterAI:
         system_instructions: str,
         temperature: float = 1.0,
         max_tokens: int = 4096,
+        debug: bool = False,
     ):
+        self.debug = debug
+
         # Initialize system message
         try:
             with open(system_instructions, "r", encoding="utf-8") as file:
@@ -33,7 +36,7 @@ class OpenWaiterAI:
         self.system_message = self.system_instructions
 
         # Tools
-        self.tools = [SQLQueryTool()]
+        self.tools = [SQLQueryTool(debug=self.debug)]
 
         # Model settings
         self.model = ChatOpenAI(

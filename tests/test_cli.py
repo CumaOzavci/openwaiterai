@@ -9,6 +9,7 @@ from openwaiterai import OpenWaiterAI
 openwaiterai = OpenWaiterAI(
     model_name="gpt-4o-mini",
     system_instructions="./system_instructions.txt",
+    debug=True,
 )
 
 print("Welcome to the OpenWaiterAI Test CLI!")
