@@ -12,6 +12,8 @@ from langchain_core.messages import (
 )
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
+from .Tools import SQLQueryTool
+
 
 class OpenWaiterAI:
     def __init__(
