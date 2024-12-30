@@ -1,4 +1,6 @@
 import os
+from typing import Optional
+
 from langchain.tools import BaseTool
 from langchain_community.utilities import SQLDatabase
 
@@ -12,6 +14,7 @@ class SQLQueryTool(BaseTool):
     description: str = (
         "A tool to query a SQL database. Provide an SQL query as input, and it will return the results."
     )
+    sql_database: Optional[SQLDatabase] = None
 
     def __init__(self):
         """
@@ -35,7 +38,6 @@ class SQLQueryTool(BaseTool):
             f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
         )
         self.sql_database = SQLDatabase.from_uri(connection_string)
-        self.connection = self.sql_database.engine.connect()
 
     def _run(self, query: str) -> str:
         """
@@ -48,7 +50,7 @@ class SQLQueryTool(BaseTool):
             str: The query result.
         """
         try:
-            result = self.connection.execute(query).fetchall()
+            result = self.sql_database.run(query)  # Use the run method
             return str(result)
         except Exception as e:
             return f"Error executing query: {str(e)}"
