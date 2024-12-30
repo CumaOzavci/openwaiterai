@@ -74,3 +74,68 @@ class SQLQueryTool(BaseTool):
             str: The query result.
         """
         raise NotImplementedError("Async query is not supported.")
+
+    def get_schema_description(self):
+        return """
+You access to restaurant database. Database is a SQL database. You can find database schema below:
+-- == CATEGORIES ==
+CREATE TABLE categories (
+    id INT PRIMARY KEY,
+    name VARCHAR(50),
+    description TEXT
+);
+
+-- == ALLERGENS ==
+CREATE TABLE allergens (
+    id INT PRIMARY KEY,
+    name VARCHAR(100) UNIQUE
+);
+
+-- == INGREDIENTS ==
+CREATE TABLE ingredients (
+    id INT PRIMARY KEY,
+    name VARCHAR(100)
+);
+
+-- == MENUITEMS ==
+CREATE TABLE menuitems (
+    id INT PRIMARY KEY,
+    category_id INT,
+    name VARCHAR(100),
+    description TEXT,
+    FOREIGN KEY (category_id) REFERENCES categories(id)
+);
+
+-- == MENUITEMINGREDIENTS (join table for menuitems ↔ ingredients) ==
+CREATE TABLE menuitemingredients (
+    menu_item_id INT,
+    ingredient_id INT,
+    PRIMARY KEY (menu_item_id, ingredient_id),
+    FOREIGN KEY (menu_item_id) REFERENCES menuitems(id) ON DELETE CASCADE,
+    FOREIGN KEY (ingredient_id) REFERENCES ingredients(id) ON DELETE CASCADE
+);
+
+-- == MENUITEMALLERGENS (join table for menuitems ↔ allergens) ==
+CREATE TABLE menuitemallergens (
+    menu_item_id INT,
+    allergen_id INT,
+    PRIMARY KEY (menu_item_id, allergen_id),
+    FOREIGN KEY (menu_item_id) REFERENCES menuitems(id) ON DELETE CASCADE,
+    FOREIGN KEY (allergen_id) REFERENCES allergens(id) ON DELETE CASCADE
+);
+
+-- == NUTRITIONALVALUES ==
+CREATE TABLE nutritionalvalues (
+    id INT PRIMARY KEY,
+    menu_item_id INT,
+    calories NUMERIC(6,2),
+    protein NUMERIC(6,2),
+    carbohydrates NUMERIC(6,2),
+    fats NUMERIC(6,2),
+    saturated_fats NUMERIC(6,2),
+    sugar NUMERIC(6,2),
+    salt NUMERIC(6,2),
+    fiber NUMERIC(6,2),
+    FOREIGN KEY (menu_item_id) REFERENCES menuitems(id) ON DELETE CASCADE
+);
+"""

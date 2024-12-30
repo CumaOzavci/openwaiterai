@@ -26,6 +26,10 @@ class OpenWaiterAI:
     ):
         self.debug = debug
 
+        # Tools
+        sql_tool = SQLQueryTool(debug=self.debug)
+        self.tools = [sql_tool]
+
         # Initialize system message
         try:
             with open(system_instructions, "r", encoding="utf-8") as file:
@@ -33,10 +37,9 @@ class OpenWaiterAI:
         except IOError as e:
             print(f"Error reading file {system_instructions}: {e}")
 
-        self.system_message = self.system_instructions
-
-        # Tools
-        self.tools = [SQLQueryTool(debug=self.debug)]
+        self.system_message = (
+            self.system_instructions + sql_tool.get_schema_description()
+        )
 
         # Model settings
         self.model = ChatOpenAI(
