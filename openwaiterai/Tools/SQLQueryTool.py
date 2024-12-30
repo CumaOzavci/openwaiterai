@@ -1,4 +1,5 @@
 import os
+import ast
 from typing import Optional
 
 from langchain.tools import BaseTool
@@ -139,3 +140,54 @@ CREATE TABLE nutritionalvalues (
     FOREIGN KEY (menu_item_id) REFERENCES menuitems(id) ON DELETE CASCADE
 );
 """
+
+    def get_menu_description(self):
+        """
+        Returns a dictionary with a "categories" key, mapping to a list of
+        { id, name, items } objects. Each "items" value is a list of { id, name }
+        for the menu items in that category.
+        """
+
+        # SQL to fetch category and related menu item info
+        query = """
+                SELECT c.id AS category_id,
+                    c.name AS category_name,
+                    m.id AS item_id,
+                    m.name AS item_name
+                FROM categories c
+                LEFT JOIN menuitems m
+                    ON c.id = m.category_id
+                ORDER BY c.id, m.id;
+            """
+
+        # Execute the query
+        rows_string = self.sql_database.run(query)
+
+        try:
+            # Safely parse the string to a list of tuples.
+            rows = ast.literal_eval(rows_string)
+        except (SyntaxError, ValueError) as e:
+            # If parsing fails, handle it
+            print(f"Could not parse result: {e}")
+            return {"categories": []}
+
+        # We'll group them by category_id
+        categories_map = {}
+        for row in rows:
+            cat_id, cat_name, item_id, item_name = row
+
+            if cat_id not in categories_map:
+                categories_map[cat_id] = {"id": cat_id, "name": cat_name, "items": []}
+
+            # If a category has no items (item_id is None), skip adding item
+            if item_id is not None:
+                categories_map[cat_id]["items"].append(
+                    {"id": item_id, "name": item_name}
+                )
+
+        # Convert to a list
+        categories_list = list(categories_map.values())
+
+        menu_description = f"You can find categories and foods below:\ncategories: {str(categories_list)}"
+
+        return menu_description

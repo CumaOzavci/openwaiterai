@@ -37,8 +37,15 @@ class OpenWaiterAI:
         except IOError as e:
             print(f"Error reading file {system_instructions}: {e}")
 
+        self.schema_description = sql_tool.get_schema_description()
+        self.menu_description = sql_tool.get_menu_description()
+
         self.system_message = (
-            self.system_instructions + sql_tool.get_schema_description()
+            self.system_instructions
+            + "\n\n"
+            + self.schema_description
+            + "\n\n"
+            + self.menu_description
         )
 
         # Model settings
