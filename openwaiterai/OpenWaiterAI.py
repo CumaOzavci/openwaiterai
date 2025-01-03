@@ -38,14 +38,17 @@ class OpenWaiterAI:
             print(f"Error reading file {system_instructions}: {e}")
 
         self.schema_description = sql_tool.get_schema_description()
+        self.restaurant_description = sql_tool.get_restaurant_description()
         self.menu_description = sql_tool.get_menu_description()
 
         self.system_message = (
             self.system_instructions
             + "\n\n"
-            + self.schema_description
-            + "\n\n"
+            + self.restaurant_description
+            + "\n"
             + self.menu_description
+            + "\n\n"
+            + self.schema_description
         )
 
         # Model settings

@@ -78,7 +78,14 @@ class SQLQueryTool(BaseTool):
 
     def get_schema_description(self):
         return """
-You access to restaurant database. Database is a SQL database. You can find database schema below:
+You can access to restaurant database. Database is a SQL database. You can find database schema below:
+-- == RESTAURANT INFO ==
+CREATE TABLE RestaurantInfo (
+    id SERIAL PRIMARY KEY,
+    category VARCHAR(50) NOT NULL,
+    description TEXT NOT NULL
+);
+
 -- == CATEGORIES ==
 CREATE TABLE categories (
     id INT PRIMARY KEY,
@@ -141,6 +148,32 @@ CREATE TABLE nutritionalvalues (
 );
 """
 
+    def get_restaurant_description(self):
+        query = "SELECT category, description FROM restaurantinfo;"
+        rows_string = self.sql_database.run(query)
+
+        try:
+            # Safely parse the string to a list of tuples.
+            rows = ast.literal_eval(rows_string)
+        except (SyntaxError, ValueError) as e:
+            # If parsing fails, handle it
+            print(f"Could not parse result: {e}")
+            return "You do not have any information about your restaurant."
+
+        summary = ""
+        categories = ""
+        for row in rows:
+            category, description = row
+            if category == "summary":
+                summary = description
+            else:
+                categories += f"- {category}\n"
+
+        restaurant_description = f"General information about your restaurant: {summary}"
+        restaurant_description += f"\nAlso, you can find the name of the restaurant info categories below\n{categories}"
+
+        return restaurant_description
+
     def get_menu_description(self):
         """
         Returns a dictionary with a "categories" key, mapping to a list of
@@ -188,6 +221,6 @@ CREATE TABLE nutritionalvalues (
         # Convert to a list
         categories_list = list(categories_map.values())
 
-        menu_description = f"You can find categories and foods below:\ncategories: {str(categories_list)}"
+        menu_description = f"You can find menu categories and contents below:\nmenu categories: {str(categories_list)}"
 
         return menu_description
