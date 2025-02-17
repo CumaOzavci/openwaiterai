@@ -146,6 +146,22 @@ CREATE TABLE nutritionalvalues (
     fiber NUMERIC(6,2),
     FOREIGN KEY (menu_item_id) REFERENCES menuitems(id) ON DELETE CASCADE
 );
+
+-- == ORDERS ==
+CREATE TABLE Orders (
+    id SERIAL PRIMARY KEY,
+    order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- == ORDERITEMS == (join table for orders ↔ menuitems)
+CREATE TABLE OrderItems (
+    id SERIAL PRIMARY KEY,
+    order_id INTEGER REFERENCES Orders(id) ON DELETE CASCADE,
+    menu_item_id INTEGER REFERENCES MenuItems(id),
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    notes TEXT
+);
+
 """
 
     def get_restaurant_description(self):
