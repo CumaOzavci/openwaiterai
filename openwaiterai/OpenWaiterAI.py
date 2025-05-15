@@ -12,7 +12,7 @@ from langchain_core.messages import (
 )
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
-from .Tools import SQLQueryTool, CustomerQueryTool
+from .Tools import SQLQueryTool, CustomerQueryTool, SetOrderSlipTool
 
 
 class OpenWaiterAI:
@@ -29,7 +29,8 @@ class OpenWaiterAI:
         # Tools
         sql_tool = SQLQueryTool(debug=self.debug)
         customer_tool = CustomerQueryTool(debug=self.debug)
-        self.tools = [sql_tool, customer_tool]
+        set_order_slip_tool = SetOrderSlipTool(debug=self.debug)
+        self.tools = [sql_tool, customer_tool, set_order_slip_tool]
 
         # Initialize system message
         try:
