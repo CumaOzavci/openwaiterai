@@ -1,6 +1,7 @@
 import os
 import ast
 import time
+import logging
 from typing import Optional
 
 from langchain.tools import BaseTool
@@ -12,7 +13,10 @@ class CustomerQueryTool(BaseTool):
     A LangChain tool for querying restaurant management.
     """
 
+    timeout: int = 30
+    interval: int = 1
     debug: bool = False
+    logger: logging.Logger = logging.getLogger(__name__)
     name: str = "CustomerQueryTool"
     description: str = (
         "A tool to query restaurant management. Provide a question as input, and it will return the answer of restaurant management."
@@ -29,9 +33,18 @@ class CustomerQueryTool(BaseTool):
         - OPENWAITERAI_DB_NAME: The database name.
         - OPENWAITERAI_DB_USER: The database username.
         - OPENWAITERAI_DB_PASSWORD: The database password.
+        - OPENWAITERAI_QUERY_TIMEOUT: The timeout for the query in seconds.
+        - OPENWAITERAI_POLL_INTERVAL: The interval for polling the query result in seconds.
         """
         super().__init__()
         self.debug = debug
+        self.logger.setLevel(logging.DEBUG)
+
+        # Configurable timeout and polling interval
+        self.timeout = int(os.getenv("OPENWAITERAI_QUERY_TIMEOUT", "30"))
+        self.interval = int(os.getenv("OPENWAITERAI_POLL_INTERVAL", "1"))
+
+        # Database connection string
         db_host = os.getenv("OPENWAITERAI_DB_HOST", "localhost")
         db_port = os.getenv("OPENWAITERAI_DB_PORT", "5432")
         db_name = os.getenv("OPENWAITERAI_DB_NAME", "example")
@@ -41,7 +54,11 @@ class CustomerQueryTool(BaseTool):
         connection_string = (
             f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
         )
-        self.sql_database = SQLDatabase.from_uri(connection_string)
+        try:
+            self.sql_database = SQLDatabase.from_uri(connection_string)
+        except Exception as e:
+            self.logger.error("Failed to connect to database", exc_info=e)
+            raise
 
     def _run(self, query: str) -> str:
         """
@@ -54,16 +71,14 @@ class CustomerQueryTool(BaseTool):
             str: The query result.
         """
         if self.debug:
-            print(f"DEBUG: Submitting question: {query}")
+            self.logger.debug("Submitting question: %s", query)
 
         # Submit the question to the SQL database
         query_id = self._submit_query(query)
         if self.debug:
-            print(f"DEBUG: Submitted question ID: {query_id}")
+            self.logger.debug("Submitted question ID: %s", query_id)
 
         # Get the result of the question
-        timeout = 30  # seconds
-        interval = 1  # seconds between polls
         start_time = time.time()
 
         query_result = None
@@ -76,23 +91,23 @@ class CustomerQueryTool(BaseTool):
                 break
 
             # Check for timeout
-            if time.time() - start_time > timeout:
+            if time.time() - start_time > self.timeout:
                 raise TimeoutError(
-                    f"Query {query_id} timed out after {timeout} seconds"
+                    f"Query {query_id} timed out after {self.timeout} seconds"
                 )
 
             # Sleep for a while before checking again
             if self.debug:
-                print(f"DEBUG: result for query {query_id} not ready, waiting...")
-            time.sleep(interval)
+                self.logger.debug("Result for query %s not ready, waiting...", query_id)
+            time.sleep(self.interval)
 
         if self.debug:
-            print(f"DEBUG: Query result: {query_result}")
+            self.logger.debug("Query result: %s", query_result)
         return query_result
 
     async def _arun(self, query: str) -> str:
         """
-        Asynchronously execute an SQL query. Not implemented in this tool.
+        Asynchronously execute an SQL query.
 
         Args:
             query (str): The SQL query to execute.
@@ -117,7 +132,11 @@ class CustomerQueryTool(BaseTool):
             f"INSERT INTO CustomerManagementQueries (question_text) "
             f"VALUES ('{safe_q}') RETURNING id;"
         )
-        result = self.sql_database.run(insert_sql)
+        try:
+            result = self.sql_database.run(insert_sql)
+        except Exception as e:
+            self.logger.error("Failed to submit query", exc_info=e)
+            raise
 
         # Parse string result into Python object if needed
         if isinstance(result, str):
@@ -146,7 +165,11 @@ class CustomerQueryTool(BaseTool):
             f"SELECT answer_text FROM CustomerManagementQueries "
             f"WHERE id = {query_id};"
         )
-        result = self.sql_database.run(select_sql)
+        try:
+            result = self.sql_database.run(select_sql)
+        except Exception as e:
+            self.logger.error("Failed to fetch query result", exc_info=e)
+            raise
 
         # Parse string result into Python object if needed
         if isinstance(result, str):

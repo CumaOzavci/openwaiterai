@@ -1,3 +1,4 @@
+import logging
 from typing import Type, List
 
 from langchain.tools import BaseTool
@@ -34,6 +35,7 @@ class SetOrderSlipTool(BaseTool):
     """
 
     debug: bool = False
+    logger: logging.Logger = logging.getLogger(__name__)
     current_order_slip: List[Order] = []
     name: str = "SetOrderSlipTool"
     description: str = "A tool to set order slips in a restaurant management system."
@@ -42,32 +44,27 @@ class SetOrderSlipTool(BaseTool):
     def __init__(self, debug: bool = False):
         super().__init__()
         self.debug = debug
+        self.logger.setLevel(logging.DEBUG)
 
-    def _run(self, order_slip: str) -> str:
+    def _run(self, order_slip: List[Order]) -> List[Order]:
         """
-        Execute an SQL query and return the result as a string.
+        Set the current order slip and return it.
 
         Args:
-            query (str): The SQL query to execute.
+            order_slip (List[Order]): The list of orders to set.
 
         Returns:
-            str: The query result.
+            List[Order]: The current order slip.
         """
         self.current_order_slip = order_slip
 
         if self.debug:
-            print(f"DEBUG: Setting Order Slip: {order_slip}")
+            self.logger.debug(f"Setting Order Slip: {order_slip}")
 
         return self.current_order_slip
 
-    async def _arun(self, query: str) -> str:
+    async def _arun(self, order_slip: List[Order]) -> List[Order]:
         """
-        Asynchronously execute an SQL query. Not implemented in this tool.
-
-        Args:
-            query (str): The SQL query to execute.
-
-        Returns:
-            str: The query result.
+        Asynchronously set the current order slip.
         """
         raise NotImplementedError("Async query is not supported.")

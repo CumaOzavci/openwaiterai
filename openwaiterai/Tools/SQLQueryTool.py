@@ -1,5 +1,6 @@
 import os
 import ast
+import logging
 from typing import Optional
 
 from langchain.tools import BaseTool
@@ -12,6 +13,7 @@ class SQLQueryTool(BaseTool):
     """
 
     debug: bool = False
+    logger: logging.Logger = logging.getLogger(__name__)
     name: str = "SQLQueryTool"
     description: str = (
         "A tool to query a SQL database. Provide an SQL query as input, and it will return the results."
@@ -31,6 +33,7 @@ class SQLQueryTool(BaseTool):
         """
         super().__init__()
         self.debug = debug
+        self.logger.setLevel(logging.DEBUG)
         db_host = os.getenv("OPENWAITERAI_DB_HOST", "localhost")
         db_port = os.getenv("OPENWAITERAI_DB_PORT", "5432")
         db_name = os.getenv("OPENWAITERAI_DB_NAME", "example")
@@ -53,16 +56,16 @@ class SQLQueryTool(BaseTool):
             str: The query result.
         """
         if self.debug:
-            print(f"DEBUG: Executing Query: {query}")
+            self.logger.debug(f"Executing Query: {query}")
         try:
             result = self.sql_database.run(query)  # Use the run method
             if self.debug:
-                print(f"DEBUG: Query Result: {result}")
+                self.logger.debug(f"Query Result: {result}")
             return str(result)
         except Exception as e:
             if self.debug:
-                print(f"DEBUG: Error occurred: {str(e)}")
-            return f"Error executing query: {str(e)}"
+                self.logger.error(f"Error executing query: {e}")
+            return f"Error executing query: {e}"
 
     async def _arun(self, query: str) -> str:
         """
@@ -179,8 +182,8 @@ CREATE TABLE WaiterCalls (
             # Safely parse the string to a list of tuples.
             rows = ast.literal_eval(rows_string)
         except (SyntaxError, ValueError) as e:
-            # If parsing fails, handle it
-            print(f"Could not parse result: {e}")
+            if self.debug:
+                self.logger.error(f"Could not parse result: {e}")
             return "You do not have any information about your restaurant."
 
         summary = ""
@@ -223,8 +226,8 @@ CREATE TABLE WaiterCalls (
             # Safely parse the string to a list of tuples.
             rows = ast.literal_eval(rows_string)
         except (SyntaxError, ValueError) as e:
-            # If parsing fails, handle it
-            print(f"Could not parse result: {e}")
+            if self.debug:
+                self.logger.error(f"Could not parse result: {e}")
             return {"categories": []}
 
         # We'll group them by category_id

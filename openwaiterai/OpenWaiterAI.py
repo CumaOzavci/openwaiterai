@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 from langchain_openai import ChatOpenAI
@@ -26,6 +27,10 @@ class OpenWaiterAI:
     ):
         self.debug = debug
 
+        # initialize logger
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
+
         # Tools
         sql_tool = SQLQueryTool(debug=self.debug)
         customer_tool = CustomerQueryTool(debug=self.debug)
@@ -37,7 +42,8 @@ class OpenWaiterAI:
             with open(system_instructions, "r", encoding="utf-8") as file:
                 self.system_instructions = file.read()
         except IOError as e:
-            print(f"Error reading file {system_instructions}: {e}")
+            self.logger.error(f"Error reading file {system_instructions}: {e}")
+            raise
 
         self.schema_description = sql_tool.get_schema_description()
         self.restaurant_description = sql_tool.get_restaurant_description()
