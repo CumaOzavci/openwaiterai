@@ -1,4 +1,5 @@
 import os
+import ast
 import time
 from typing import Optional
 
@@ -117,6 +118,14 @@ class CustomerQueryTool(BaseTool):
             f"VALUES ('{safe_q}') RETURNING id;"
         )
         result = self.sql_database.run(insert_sql)
+
+        # Parse string result into Python object if needed
+        if isinstance(result, str):
+            try:
+                result = ast.literal_eval(result)
+            except Exception:
+                pass
+
         # Extract the ID – `result` may be a list of tuples or a raw value
         if isinstance(result, list) and result:
             inserted_id = result[0][0]
