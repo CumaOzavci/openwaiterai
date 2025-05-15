@@ -162,6 +162,13 @@ CREATE TABLE OrderItems (
     notes TEXT
 );
 
+-- == WAITERCALLS ==
+CREATE TABLE WaiterCalls (
+    id SERIAL PRIMARY KEY,
+    call_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    reason TEXT NULL
+);
+
 """
 
     def get_restaurant_description(self):
