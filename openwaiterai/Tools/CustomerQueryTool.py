@@ -148,6 +148,13 @@ class CustomerQueryTool(BaseTool):
         )
         result = self.sql_database.run(select_sql)
 
+        # Parse string result into Python object if needed
+        if isinstance(result, str):
+            try:
+                result = ast.literal_eval(result)
+            except Exception:
+                pass
+
         if isinstance(result, list) and result:
             query_result = result[0][0]
         else:
