@@ -28,7 +28,13 @@ export OPENWAITERAI_QUERY_TIMEOUT=30
 export OPENWAITERAI_POLL_INTERVAL=1
 ```
 
-## 3. Running
+## 3. Test
 ```
 python tests/test_cli.py
 ```
+
+## Devlogs:
+1. [OpenwaiterAI Devlog #0: Introduction](https://cumaozavci.github.io/ai/openwaiterai/2024/11/18/openwaiterai_0_introduction.html)
+2. [OpenwaiterAI Devlog #1: Instructions](https://cumaozavci.github.io/ai/openwaiterai/2024/12/09/openwaiterai_1_instructions.html)
+3. [OpenwaiterAI Devlog #2: Retrieval Augmented Generation](https://cumaozavci.github.io/ai/openwaiterai/rag/2025/02/17/openwaiterai_2_rag.html)
+4. [OpenwaiterAI Devlog #3: Finishing Tools and System Message](https://cumaozavci.github.io/ai/openwaiterai/rag/2025/05/17/openwaiterai_3_finishing.html)
